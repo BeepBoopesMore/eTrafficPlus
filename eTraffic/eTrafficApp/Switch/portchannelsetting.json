@@ -1,0 +1,10 @@
+
+{
+
+
+
+
+    "Interfaces":["first","second","third"],
+    "Channel-Protocol":"YOUR_PROTOCOL",
+    "PORT-ID":2
+}
