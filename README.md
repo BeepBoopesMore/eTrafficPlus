@@ -13,3 +13,12 @@ Well i plan on releasing this in forms of not only network but Enterprise such a
 # Where are the templates docs?
 There is no need for docs for that , you can just read 
 the file Templates.md to see how to use the respective template such for port-security , port-channel , etc. it's all there.
+
+
+
+#What vendors are available?
+- Cisco
+- Juniper
+- Huawei(Future)
+- TP_Link(Future)
+- Others in the future
