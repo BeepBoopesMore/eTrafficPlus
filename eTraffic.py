@@ -3,7 +3,7 @@ import json
 import time 
 import requests
 from time import sleep as wait 
-
+import eTrafficApp.ErrorHandling
 # Doing yet just Juniper And Cisco
 #To Do:
 #TP_LINK
@@ -137,8 +137,9 @@ class Router():
         print("Waiting")
 
 
-
-
+    def dynamic_protocol_ospf(self):
+         with open("templatedynamic.json","r") as file:
+              data = json.load(file)
 
     #Show Running Config
     def show_running_config(self):
@@ -165,7 +166,7 @@ class Router():
     
 
 
-    def routing_protocol(self):
+    def show_routing_protocol(self):
         if self.vendor == "Cisco":
            client = paramiko.client.SSHClient()
            client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
@@ -184,8 +185,7 @@ class Router():
         if self.vendor == "juniper":
              command = 'show configuration protocols'
 
-
-
+    
 
     #Make multiple changes for multiple routers based on a template
     def make_changes(self):
@@ -232,7 +232,6 @@ class Router():
         prefix_30 = "255.255.255.252"
         prefix_31 = "255.255.255.254"
         prefix_32 = "255.255.255.255"
-        final_command = ""
         if self.vendor == "Cisco":
             if destination_prefix == 0:
                 subnet_mask = prefix_0
@@ -374,7 +373,7 @@ class Router():
                 subnet_mask = prefix_31
             elif destination_prefix == 32:
                 subnet_mask = prefix_32
-            command = "en && conf && ip route " + destination_ip + " " + subnet_mask + " " + next_hop +  " "  + administrative_distance +  " && exit && write  "
+            command = "en && conf t  && ip route " + destination_ip + " " + subnet_mask + " " + next_hop +  " "  + administrative_distance + " && exit && write"
             client = paramiko.client.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
             client.connect(self.host, username=self.username, password=self.password)
@@ -382,7 +381,6 @@ class Router():
             command_output = "".join(_stdout.read().decode())
             print(command_output)
         if self.vendor == "Juniper":
-
             #reference_command = "set qualified-next-hop 192.168.2.2 preference 25"
             command  = "conf && set routing-options static route  " + destination_ip +str(destination_prefix) + " next-hop " + next_hop + " metric " +  administrative_distance 
             client = paramiko.client.SSHClient()
@@ -399,6 +397,11 @@ class Router():
             _stdin, _stdout,_stderr = client.exec_command(command)
             command_output = "".join(_stdout.read().decode())
             print(command_output)
+    
+
+
+
+
     #Show ip table for ipv4
     def show_ip_route_table_ipv4(self):
          if self.vendor == "Cisco":
@@ -410,7 +413,6 @@ class Router():
               command_output = "".join(_stdout.read().decode())
               print(command_output)
          if self.vendor == "cisco":
-              command = "en and && show ip route"
               command = "en && show ip route "
               client = paramiko.client.SSHClient()
               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
@@ -419,7 +421,41 @@ class Router():
               command_output = "".join(_stdout.read().decode())
               print(command_output)
          if self.vendor == "Juniper":
-              command = ""
+              command = "show route ipv4"
+              client = paramiko.client.SSHClient()
+              client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+              client.connect(self.host, username=self.username, password=self.password)
+              _stdin, _stdout,_stderr = client.exec_command(command)
+              command_output = "".join(_stdout.read().decode())
+              print(command_output)
+         if self.vendor == "juniper":
+              command = "show route ipv4"
+              client = paramiko.client.SSHClient()
+              client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+              client.connect(self.host, username=self.username, password=self.password)
+              _stdin, _stdout,_stderr = client.exec_command(command)
+              command_output = "".join(_stdout.read().decode())
+              print(command_output)
+ 
+    def startup_config(self):
+         vendor = self.vendor.lower()
+         if vendor == "cisco":
+              command =  "en && show startup-config "
+              client = paramiko.client.SSHClient()
+              client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+              client.connect(self.host, username=self.username, password=self.password)
+              _stdin, _stdout,_stderr = client.exec_command(command)
+              command_output = "".join(_stdout.read().decode())
+              print(command_output)
+         if vendor == "juniper":
+              command = "cli && show configuration"
+              client = paramiko.client.SSHClient()
+              client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+              client.connect(self.host, username=self.username, password=self.password)
+              _stdin, _stdout,_stderr = client.exec_command(command)
+              command_output = "".join(_stdout.read().decode())
+              print(command_output)
+
 
     #Using CDP and LLDP to find neighbours , you need to have cdp or lldp enabled on the int 
     def neighbours(self,cdp:bool,lldp:bool,detailed:bool):
@@ -568,7 +604,7 @@ class Router():
             print(command_output)
 
 
-
+     
 
 
 
@@ -600,3 +636,21 @@ class TFTP_SERVER():
 class Switch():
     def __init__(self):
          pass
+    
+    #def port_channel(self):
+         #vendor2 = self.vendor.lower
+         #with open("portchannelsetting.json","r") as portchannel:
+              #info = json.load(portchannel)
+              #interfaces = info["Interfaces"]
+              #port_id = info["PORT-ID"]
+              #protocol  = info["Channel-Protocol"]
+              #if vendor2 == "cisco":
+                   #if protocol == "LACP":
+                        #command = "en && conf t && int " + item + " && channel-group " + port_id + " active" + " && ex && ex && wr"
+                   #for item in interfaces:
+                        #client = paramiko.client.SSHClient()
+                        #client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                        #client.connect(self.host, username=self.username, password=self.password)
+                       # _stdin, _stdout,_stderr = client.exec_command(command + item + " && channel-group " + port_id)
+                        #command_output = "".join(_stdout.read().decode())
+                        #print(command_output)
