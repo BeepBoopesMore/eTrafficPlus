@@ -1,6 +1,6 @@
 # A guide to eTraffic
 ## What is eTraffic?
-eTraffic is a FrameWork , designed in python which is meant to be used for switches and routers managing them easier
+eTraffic is a FrameWork , designed in python which is meant to be used for  switches and routers managing them easier
 
 
 # Important!! 
