@@ -3,7 +3,7 @@
 eTraffic is a FrameWork , designed in python which is meant to be used for switches and routers managing them easier
 
 
-# Import!! 
+# Important!! 
 Although eTraffic makes configuration easier that does not mean you don't need networking knowledge at all with the respective device , you still need to know the syntax of things like access lists and know what inside local and inside global is for NAT aswell as other functions , the framework just connects instantly via ssh into a device and uses templates but some things you have to write yourself.
 If you know those just use the instructions in the respective function.
 
