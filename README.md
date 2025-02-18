@@ -2,8 +2,14 @@
 ## What is eTraffic?
 eTraffic is a FrameWork , designed in python which is meant to be used for switches and routers managing them easier
 
+
+# Import!! 
+Although eTraffic makes configuration easier that does not mean you don't need networking knowledge at all with the respective device , you still need to know the syntax of things like access lists and know what inside local and inside global is for NAT aswell as other functions , the framework just connects instantly via ssh into a device and uses templates but some things you have to write yourself.
+If you know those just use the instructions in the respective function.
+
+
 ## Why eTraffic?
-eTraffic is genuinely easier to use than netmiko and u barely have to do anything besides just editing the provided template and use the base models functions which are all pretty straight forward
+eTraffic is genuinely easier to use  and u barely have to do anything besides just editing the provided template and use the base models functions which are all pretty straight forward
 ## How does eTraffic work?
 eTraffic made with paramiko works by using SSH ,agent-free on the respective router/switch and it just does specific commands based on json templates that u can model.
 
