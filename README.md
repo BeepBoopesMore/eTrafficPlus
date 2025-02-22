@@ -37,13 +37,17 @@ the file Templates.md to see how to use the respective template such for port-se
 import eTraffic
 from eTraffic import Router
 from eTrafficUtils import Office
+from eTraffic import Switch
 
 
-
-router = Router("10.0.0.1","Musk","password","Cisco")
-clock = router.clock
-version = router.version
-router.configure_interfaces()
+router1 = Router("10.0.0.1","Musk","password","Cisco")
+clock_r1 = router1.clock
+version_r1 = router1.version
+router1.configure_interfaces()
+router2 = Router("10.0.0.2","Banny","password","Juniper")
+clock_r2 = router2.clock
+version_r2 = router2.version
+router2.setup_NTP("10.0.0.1",become_host=False)
 
 
 
