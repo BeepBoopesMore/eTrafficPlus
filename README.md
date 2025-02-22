@@ -30,3 +30,17 @@ the file Templates.md to see how to use the respective template such for port-se
 - Huawei(Future)
 - TP_Link(Future)
 - Others in the future
+
+# Code Sample
+
+```
+import eTraffic
+from eTraffic import Router
+
+
+router = Router()
+
+
+
+
+```
