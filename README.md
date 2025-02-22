@@ -36,9 +36,14 @@ the file Templates.md to see how to use the respective template such for port-se
 ```
 import eTraffic
 from eTraffic import Router
+from eTrafficUtils import Office
 
 
-router = Router()
+
+router = Router("10.0.0.1","Musk","password","Cisco")
+clock = router.clock
+version = router.version
+router.configure_interfaces()
 
 
 
