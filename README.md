@@ -33,7 +33,8 @@ the file Templates.md to see how to use the respective template such for port-se
 
 # Code Sample
 
-```
+```python3
+
 import eTraffic
 from eTraffic import Router
 from eTrafficUtils import Office
