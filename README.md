@@ -16,6 +16,8 @@ eTraffic made with paramiko works by using SSH ,agent-free on the respective rou
 ## What is the future like for eTraffic?
 Well i plan on releasing this in forms of not only network but Enterprise such as Servers(Linux/Windows) aswell.
 - And i also plan on making a go framework aswell
+   # Also, also
+   - I do want to make the Office Manager which is basically a subnetting tool which you just put ur router in and you setup your vlans etc into things called Offices
 
 
 # Where are the templates docs?
