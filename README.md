@@ -44,7 +44,7 @@ from eTraffic import Switch
 router1 = Router("10.0.0.1","Musk","password","Cisco")
 clock_r1 = router1.clock
 version_r1 = router1.version
-router1.configure_interfaces()
+router1.configure_interfaces(template_path="YOUR_JSON_FILE_PATH_HERE")
 router2 = Router("10.0.0.2","Banny","password","Juniper")
 clock_r2 = router2.clock
 version_r2 = router2.version
