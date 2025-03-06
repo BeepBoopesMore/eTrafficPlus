@@ -1,23 +1,23 @@
 import paramiko
 import json
-import time 
 import paramiko.client
 import paramiko.ssh_exception
 import requests
 from time import sleep as wait 
 import os
+import socket
+from socket import gaierror
 # Doing yet just Juniper And Cisco
 #TO DO:
 #Dell
 #Huawei
 #The ones that work at Mr.Krabs
+# I am not completely devoted to this but I WILL  finish it
 #
-#
-#DONE
-#Cisco
-#Juniper
+#DONE/70% Router
+#Cisco / 70%
+#Juniper / 60% maybe?
 
-client = paramiko.client.SSHClient
 
 
 class Router():
@@ -28,36 +28,219 @@ class Router():
              self.host = host
              self.username = username
              self.password = password
-             #Commands for Cisco
+             #These are raw i need to beautify them !!!!!! TO DO BTW
+             #Commands for Cisco , to use in others or strings unlike the show functions which you just use to see stuff and can't work around
              if vendor.lower() == "cisco":
-                 #Clock
+               #Clock
                  client = paramiko.client.SSHClient()
                  client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
                  client.connect(self.host, username=self.username, password=self.password)
                  _stdin, _stdout,_stderr = client.exec_command("enable && show clock detail")
                  raw = _stdout.read().decode()
                  self.clock = "".join(raw)
-                 #Hostname
+               #Hostname
                  client2 = paramiko.client.SSHClient()
                  client2.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
                  client2.connect(self.host, username=self.username, password=self.password) 
                  _stdin, _stdout,_stderr = client.exec_command("enable && show running-config | include hostname")
                  raw2 = _stdout.read().decode()
                  self.hostname = "".join(raw2) 
-                 #Model
+               #Model
                  client3 = paramiko.client.SSHClient()
                  client3.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
                  client3.connect(self.host, username=self.username, password=self.password) 
                  _stdin, _stdout,_stderr = client.exec_command("enable && show version | include Model")
                  raw3 = _stdout.read().decode()
                  self.model = "".join(raw3)
-                 #Version Command?
+               #Version 
                  client4 = paramiko.client.SSHClient()
                  client4.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                  client4.connect(self.host,username=self.username,password=self.password)
                  _stdin, _stdout,_stderr = client.exec_command("enable && show version")
                  raw4 = _stdout.read().decode()
                  self.version = "".join(raw4)
+               #Running Config
+                 client5 = paramiko.client.SSHClient()
+                 client5.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client5.connect(self.host,username=self.username,password=self.password)
+                 _stdin, _stdout,_stderr = client.exec_command("enable && show running-config")
+                 raw5 = _stdout.read().decode()
+                 self.running_config = "".join(raw5)
+               #Memory usage
+                 client6 = paramiko.client.SSHClient()
+                 client6.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client6.connect(self.host,username=self.username,password=self.password)
+                 _stdin, _stdout,_stderr = client.exec_command("enable && show memory")
+                 raw6 = _stdout.read().decode()
+                 self.memory = "".join(raw6)
+               #Arp Table
+                 client7 = paramiko.client.SSHClient()
+                 client7.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client7.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip arp")
+                 raw7 = _stdout.read().decode()
+                 self.arp_table = "".join(raw7)
+               #License
+                 client8 = paramiko.client.SSHClient()
+                 client8.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client8.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show license all")
+                 raw8 = _stdout.read().decode()
+                 self.license = "".join(raw8)
+               #Primary Routing Protocol
+                 client9 = paramiko.client.SSHClient()
+                 client9.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client9.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip protocols")
+                 raw9 = _stdout.read().decode()
+                 self.routing_protocol_used = "".join(raw9)
+               #NAT Translations
+                 client10 = paramiko.client.SSHClient()
+                 client10.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client10.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip nat translations")
+                 raw10 = _stdout.read().decode()
+                 self.nat_translations = "".join(raw10)
+                #CDP Neighbors Non-Detailed
+                 client11 = paramiko.client.SSHClient()
+                 client11.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client11.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show cdp neighbors")
+                 raw11 = _stdout.read().decode()
+                 self.cdp_neighbours = "".join(raw11)
+               #LLDP Neighbors If Active
+                 client12 = paramiko.client.SSHClient()
+                 client12.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client12.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show lldp neighbors")
+                 raw12 = _stdout.read().decode()
+                 self.lldp_neighbours = "".join(raw12)
+               #CDP Neighbors Detailed
+                 client13 = paramiko.client.SSHClient()
+                 client13.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client13.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show cdp neighbors detail")
+                 raw13 = _stdout.read().decode()
+                 self.cdp_neighbors_detailed = "".join(raw13)
+               #LLDP Neighbors Detailed if Active
+                 client14 = paramiko.client.SSHClient()
+                 client14.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client14.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show lldp neighbors detail")
+                 raw14 = _stdout.read().decode()
+                 self.lldp_neighbours_detailed = "".join(raw14)
+              #Ip Route Table IPV4  
+                 client15 = paramiko.client.SSHClient()
+                 client15.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client15.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip route")
+                 raw15 = _stdout.read().decode()
+                 self.ipv4_routes = "".join(raw15)
+              #Ip Route Table IPV6  
+                 client16 = paramiko.client.SSHClient()
+                 client16.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client16.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ipv6 route")
+                 raw16 = _stdout.read().decode()
+                 self.ipv6_routes = "".join(raw16)
+              #DHCP Bindings if the router acts as the server providing ips
+                 client17 = paramiko.client.SSHClient()
+                 client17.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client17.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip dhcp bindings")
+                 raw17 = _stdout.read().decode()
+                 self.dhcp_bindings  = "".join(raw17)
+              #Startup config
+                 client18 = paramiko.client.SSHClient()
+                 client18.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client18.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip startup-config")
+                 raw18 = _stdout.read().decode()
+                 self.dhcp_bindings  = "".join(raw18)
+              #Users
+                 client19 = paramiko.client.SSHClient()
+                 client19.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client19.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show users")
+                 raw19 = _stdout.read().decode()
+                 self.users_connected  = "".join(raw19)
+              #Vlan info
+                 client20 = paramiko.client.SSHClient()
+                 client20.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client20.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show vlan brief")
+                 raw20 = _stdout.read().decode()
+                 self.users_connected  = "".join(raw20)
+              #AAA info
+                 client21 = paramiko.client.SSHClient()
+                 client21.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client21.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show aaa")
+                 raw21 = _stdout.read().decode()
+                 self.users_connected  = "".join(raw21)
+              #NTP Status
+                 client22 = paramiko.client.SSHClient()
+                 client22.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client22.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ntp status")
+                 raw22 = _stdout.read().decode()
+                 self.ntp_status  = "".join(raw22)
+              #Cpu Utilization
+                 client23 = paramiko.client.SSHClient()
+                 client23.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client23.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show cpu")
+                 raw23 = _stdout.read().decode()
+                 self.cpu_utilization  = "".join(raw23)
+              #Ospf Neighbors
+                 client24 = paramiko.client.SSHClient()
+                 client24.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client24.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip ospf neighbor")
+                 raw24 = _stdout.read().decode()
+                 self.ospf_neighbors  = "".join(raw24)       
+              #Ospf Database
+                 client25 = paramiko.client.SSHClient()
+                 client25.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client25.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip ospf database")
+                 raw25 = _stdout.read().decode()
+                 self.ospf_database  = "".join(raw25)    
+              #BGP Info
+                 client26 = paramiko.client.SSHClient()
+                 client26.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client26.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip bgp")
+                 raw26 = _stdout.read().decode()
+                 self.bgp_info  = "".join(raw26)
+              #RIP Info
+                 client27 = paramiko.client.SSHClient()
+                 client27.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client27.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show ip rip")
+                 raw27 = _stdout.read().decode()
+                 self.rip_info  = "".join(raw27)
+              #Memory Utilization
+                 client28 = paramiko.client.SSHClient()
+                 client28.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client28.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && show memory")
+                 raw28 = _stdout.read().decode()
+                 self.memory_use  = "".join(raw28)
+              #Processes  
+                 client29 = paramiko.client.SSHClient()
+                 client29.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                 client29.connect(self.host,username=self.username,password=self.password)
+                 _stdin,_stdout,_stderr = client.exec_command("enable && processes")
+                 raw29 = _stdout.read().decode()
+                 self.processes  = "".join(raw29)
+
+             
+                 
+                 
+          
+                
+
              else:
                   print("!!! This Vendor is not yet coded or not existent !!! ".upper())
 
@@ -67,7 +250,9 @@ class Router():
              d = "!!!!!! The connection doesn't exist or the host doesn't allow ssh connections.. !!!!!!!!".upper()
              print(d)
         except TimeoutError:
-             print("!!! OOPS SOMETHING HAPPENED BUT MOST LIKELY THE HOST IS DOWN OR DOESN'T EXIST  !!!")
+             print("!!! OOPS SOMETHING HAPPENED BUT MOST LIKELY THE HOST IS DOWN OR DOESN'T EXIST OR DOESN'T ACCEPT PORT 22 !!!")
+        except UnicodeError:
+             print("!!! rewrite the router info  , it is not valid you idiot !!!  ".upper())
         pass
       
     #Send a specific command ,curently just testing
@@ -143,7 +328,7 @@ class Router():
     #License 
     def license(self):
          if self.vendor == "cisco":
-              command = "en && show license all"
+              command = "enable && show license all"
               client = paramiko.client.SSHClient()
               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
               client.connect(self.host, username=self.username, password=self.password)
@@ -151,7 +336,7 @@ class Router():
               command_output = "".join(_stdout.read().decode())
               print(command_output)
          if self.vendor == "Cisco":
-              command = "en && show license all"
+              command = "enable && show license all"
               client = paramiko.client.SSHClient()
               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
               client.connect(self.host, username=self.username, password=self.password)
@@ -198,10 +383,10 @@ class Router():
 
 
     #Only on cisco !! Activating LLDP
-    def activate_lldp(self):
+    def activate_lldp(self,file_path:str):
          if self.vendor.lower() == "cisco":
               path = "../eTrafficApp/Router/lldp.json"
-              with open(path,"r") as file:
+              with open(file_path,"r") as file:
                    data = json.load(file)
                    interfaces_receive = data["interfaces_receive"]
                    interfaces_transmit = data["interfaces_transmit"]
@@ -244,12 +429,390 @@ class Router():
                    command = "Will see "
               elif self.vendor.lower() =="juniper":
                    command = "will see"
+    #Turning on an interface
+    def turn_on_interfaces(self,interfaces:list):
+     apendixes = ["g","f","s"]
+     if self.vendor.lower() == "cisco":
+          for item in interfaces:
+               command = "enable && configure terminal && interface " + item + " && no shutdown && exit && exit && write"
+               client = paramiko.client.SSHClient()
+               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+               client.connect(self.host, username=self.username, password=self.password)
+               _stdin, _stdout,_stderr = client.exec_command(command)
+               command_output = "".join(_stdout.read().decode())
+               print(command_output)
+               wait(1.2)
+     elif self.vendor.lower() == "juniper":
+          for item in interfaces :
+               command = "configure && edit interfaces " + item  + " && delete disable && commit"
+               client = paramiko.client.SSHClient()
+               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+               client.connect(self.host, username=self.username, password=self.password)
+               _stdin, _stdout,_stderr = client.exec_command(command)
+               command_output = "".join(_stdout.read().decode())
+               print(command_output)
 
-
-     #Setup an NTP server , you can either choose to become one or get info from one 
-    def setup_NTP(self,server:str,host:bool):
+     #Disable interfaces
+    def disable_interfaces(self,interfaces:list):
          if self.vendor.lower() == "cisco":
-              if host == True:
+              for item in interfaces:
+                   command = "enable && configure terminal && " + item + " && shutdown && exit && exit && write"
+                   client = paramiko.client.SSHClient()
+                   client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                   client.connect(self.host, username=self.username, password=self.password)
+                   _stdin, _stdout,_stderr = client.exec_command(command)
+                   command_output = "".join(_stdout.read().decode())
+                   print(command_output)
+
+         elif self.vendor.lower() == "juniper":
+              for item in interfaces:
+                   command = "configure && edit interfaces " + item + " && set disable && commit"
+                   client = paramiko.client.SSHClient()
+                   client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                   client.connect(self.host, username=self.username, password=self.password)
+                   _stdin, _stdout,_stderr = client.exec_command(command)
+                   command_output = "".join(_stdout.read().decode())
+                   print(command_output)
+    #Configure Ipv4 the default way obv and ipv6 using EUI-64
+    def configure_interfaces(self,template_path:str):
+         if self.vendor.lower() == "cisco":
+              with open(template_path,"r") as file:
+                   if self.vendor.lower() == "cisco":
+                        data = json.load(file)
+                        so = data["interfaces"]
+                        for datas in so :
+                             interface = datas["interface"]
+                             ip = datas["ip_address"]
+                             subnet_mask = datas["subnet_mask"]
+                             list_subnets = ["0.0.0.0","128.0.0.0","192.0.0.0","224.0.0.0","240.0.0.0","248.0.0.0","252.0.0.0","254.0.0.0","255.0.0.0","255.128.0.0","255.192.0.0","255.224.0.0","255.240.0.0","255.248.0.0","255.252.0.0","255.254.0.0","255.255.0.0","255.255.128.0","255.255.192.0","255.255.224.0","255.255.240.0","255.255.248.0","255.255.252.0","255.255.254.0","255.255.255.0","255.255.255.128","255.255.255.192","255.255.255.224","255.255.255.240","255.255.255.248","255.255.255.252","255.255.255.254","255.255.255.255"]
+                             interface_type = datas["interface_type"]
+                             if interface_type == "ipv6":
+                                  command = "enable && configure terminal && interface " + interface + " && ipv6 address " + ip + " eui-64" + " && no shutdown && exit && exit && write"
+                                  client = paramiko.client.SSHClient()
+                                  client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                                  client.connect(self.host, username=self.username, password=self.password)
+                                  _stdin, _stdout,_stderr = client.exec_command(command)
+                                  command_output = "".join(_stdout.read().decode())
+                                  print(command_output)
+                             elif interface_type == "ipv4":
+                                  if subnet_mask not in list_subnets:
+                                      print("!!! "  + subnet_mask +  " is not a valid subnet mask !!!! ".upper())
+                                  else:
+                                       command = "enable && configure terminal && interface " + interface + " && ip address " + ip + " " + subnet_mask + " && no shutdown && exit && exit && write "
+                                       client = paramiko.client.SSHClient()
+                                       client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                                       client.connect(self.host, username=self.username, password=self.password)
+                                       _stdin, _stdout,_stderr = client.exec_command(command)
+                                       command_output = "".join(_stdout.read().decode())
+                                       print(command_output)
+                             else:
+                                  print("!!! " + interface_type + " is not an ipv6 or ipv4 so please mention which..  !!! ")
+                   elif self.vendor.lower() == "juniper":
+                        data = json.load(file)
+                        so = data["interfaces"]
+                        for datas in so:
+                             interface = datas["interface"]
+                             ip = datas["ip_address"]
+                             subnet_mask = datas["subnet_mask"]
+                             list_subnets = ["0.0.0.0","128.0.0.0","192.0.0.0","224.0.0.0","240.0.0.0","248.0.0.0","252.0.0.0","254.0.0.0","255.0.0.0","255.128.0.0","255.192.0.0","255.224.0.0","255.240.0.0","255.248.0.0","255.252.0.0","255.254.0.0","255.255.0.0","255.255.128.0","255.255.192.0","255.255.224.0","255.255.240.0","255.255.248.0","255.255.252.0","255.255.254.0","255.255.255.0","255.255.255.128","255.255.255.192","255.255.255.224","255.255.255.240","255.255.255.248","255.255.255.252","255.255.255.254","255.255.255.255"]
+                             interface_type = datas["interface_type"]
+                             if interface_type == "ipv6":
+                                  command = "configure  && edit interfaces " + interface + " && set unit 0 family inet6 address " + ip + " && set unit 0 family inet6 disable && commit " 
+                                  client = paramiko.client.SSHClient()
+                                  client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                                  client.connect(self.host, username=self.username, password=self.password)
+                                  _stdin, _stdout,_stderr = client.exec_command(command)
+                                  command_output = "".join(_stdout.read().decode())
+                                  print(command_output)
+                             elif interface_type == "ipv4":
+                                  #Done the prefixes YEYE!!
+                                  prefix_0 = "0.0.0.0"
+                                  prefix_1 = "128.0.0.0"
+                                  prefix_2 = "192.0.0.0"
+                                  prefix_3 = "224.0.0.0"
+                                  prefix_4 = "240.0.0.0"
+                                  prefix_5 = "248.0.0.0"
+                                  prefix_6 = "252.0.0.0"
+                                  prefix_7 = "254.0.0.0"
+                                  prefix_8 = "255.0.0.0"
+                                  prefix_9 = "255.128.0.0"
+                                  prefix_10 = "255.192.0.0"
+                                  prefix_11 = "255.224.0.0"
+                                  prefix_12 = "255.240.0.0"
+                                  prefix_13 = "255.248.0.0"
+                                  prefix_14 = "255.252.0.0"
+                                  prefix_15 = "255.254.0.0"
+                                  prefix_16 = "255.255.0.0"
+                                  prefix_17 = "255.255.128.0"
+                                  prefix_18 = "255.255.192.0"
+                                  prefix_19  = "255.255.224.0"
+                                  prefix_20  = "255.255.240.0"
+                                  prefix_21  = "255.255.248.0"
+                                  prefix_22 = "255.255.252.0"
+                                  prefix_23 = "255.255.254.0"
+                                  prefix_24 = "255.255.255.0"
+                                  prefix_25 = "255.255.255.128"
+                                  prefix_26 = "255.255.255.192"
+                                  prefix_27 = "255.255.255.224"
+                                  prefix_28 = "255.255.255.240"
+                                  prefix_29 = "255.255.255.248"
+                                  prefix_30 = "255.255.255.252"
+                                  prefix_31 = "255.255.255.254"
+                                  prefix_32 = "255.255.255.255"
+                                  if subnet_mask not in list_subnets:
+                                        print("!!! "  + subnet_mask +  " is not a valid subnet mask !!!! ".upper())
+                                  else:
+                                       if subnet_mask == prefix_0:
+                                            prefix = "/0"
+                                       elif subnet_mask == prefix_1:
+                                            prefix = "/1"
+                                       elif subnet_mask == prefix_2:
+                                            prefix = "/2"
+                                       elif subnet_mask == prefix_3:
+                                            prefix = "/3"
+                                       elif subnet_mask == prefix_4:
+                                            prefix = "/4"
+                                       elif subnet_mask == prefix_5:
+                                            prefix = "/5"
+                                       elif subnet_mask == prefix_6:
+                                            prefix = "/6"
+                                       elif subnet_mask == prefix_7:
+                                            prefix = "/7"
+                                       elif subnet_mask == prefix_8:
+                                            prefix = "/8"
+                                       elif subnet_mask == prefix_9:
+                                            prefix = "/9"
+                                       elif subnet_mask == prefix_10:
+                                            prefix = "/10"
+                                       elif subnet_mask == prefix_11:
+                                            prefix = "/11"
+                                       elif subnet_mask == prefix_12:
+                                            prefix = "/12"
+                                       elif subnet_mask == prefix_13:
+                                            prefix = "/13"
+                                       elif subnet_mask == prefix_14:
+                                            prefix = "/14"
+                                       elif subnet_mask == prefix_15:
+                                            prefix = "/15"
+                                       elif subnet_mask == prefix_16:
+                                            prefix = "/16"
+                                       elif subnet_mask == prefix_17:
+                                            prefix = "/17"
+                                       elif subnet_mask == prefix_18:
+                                            prefix = "/18"
+                                       elif subnet_mask == prefix_19:
+                                            prefix = "/19"
+                                       elif subnet_mask == prefix_20:
+                                            prefix = "/20"
+                                       elif subnet_mask == prefix_21:
+                                            prefix = "/21"
+                                       elif subnet_mask == prefix_22:
+                                            prefix = "/22"
+                                       elif subnet_mask == prefix_23:
+                                            prefix = "/23"
+                                       elif subnet_mask == prefix_24:
+                                            prefix = "/24"
+                                       elif subnet_mask == prefix_25:
+                                            prefix = "/25"
+                                       elif subnet_mask == prefix_26:
+                                            prefix = "/26"
+                                       elif subnet_mask == prefix_27:
+                                            prefix = "/27"
+                                       elif subnet_mask == prefix_28:
+                                            prefix = "/28"
+                                       elif subnet_mask == prefix_29:
+                                            prefix = "/29"
+                                       elif subnet_mask == prefix_30:
+                                            prefix = "/30"
+                                       elif subnet_mask == prefix_31:
+                                            prefix = "/31"
+                                       elif subnet_mask == prefix_32:
+                                            prefix = "/32"
+                                       ip_finished = ip + prefix
+                                       command = "configure && set interfaces " + interface  +  " unit 0 family inet address " +  ip_finished + " && set unit 0 family inet disable  && commit"
+                                       client = paramiko.client.SSHClient()
+                                       client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                                       client.connect(self.host, username=self.username, password=self.password)
+                                       _stdin, _stdout,_stderr = client.exec_command(command)
+                                       command_output = "".join(_stdout.read().decode())
+                                       print(command_output)
+                                                       
+                             else:
+                                  print("!!! " + interface_type + " is not an ipv6 or ipv4 so please mention which..  !!! ")
+                                  
+
+    #Configuring sub interfaces                   
+    def configure_sub_interfaces(self,file_path:str):
+         try:
+              #Prefixes again yey!!
+              prefix_0 = "0.0.0.0"
+              prefix_1 = "128.0.0.0"
+              prefix_2 = "192.0.0.0"
+              prefix_3 = "224.0.0.0"
+              prefix_4 = "240.0.0.0"
+              prefix_5 = "248.0.0.0"
+              prefix_6 = "252.0.0.0"
+              prefix_7 = "254.0.0.0"
+              prefix_8 = "255.0.0.0"
+              prefix_9 = "255.128.0.0"
+              prefix_10 = "255.192.0.0"
+              prefix_11 = "255.224.0.0"
+              prefix_12 = "255.240.0.0"
+              prefix_13 = "255.248.0.0"
+              prefix_14 = "255.252.0.0"
+              prefix_15 = "255.254.0.0"
+              prefix_16 = "255.255.0.0"
+              prefix_17 = "255.255.128.0"
+              prefix_18 = "255.255.192.0"
+              prefix_19  = "255.255.224.0"
+              prefix_20  = "255.255.240.0"
+              prefix_21  = "255.255.248.0"
+              prefix_22 = "255.255.252.0"
+              prefix_23 = "255.255.254.0"
+              prefix_24 = "255.255.255.0"
+              prefix_25 = "255.255.255.128"
+              prefix_26 = "255.255.255.192"
+              prefix_27 = "255.255.255.224"
+              prefix_28 = "255.255.255.240"
+              prefix_29 = "255.255.255.248"
+              prefix_30 = "255.255.255.252"
+              prefix_31 = "255.255.255.254"
+              prefix_32 = "255.255.255.255"
+              path = "../eTrafficApp/Router/config_subinterfaces.json"
+              with open(file_path,"r") as file:
+                   data = json.load(file)   
+                   interfaces = data["interfaces"]  
+                   subnet_mask_used = item["subnet_mask"]
+                   if subnet_mask_used == prefix_0:
+                        prefix = 0 
+                   elif subnet_mask_used == prefix_1:
+                        prefix = 1 
+                   elif subnet_mask_used == prefix_2:
+                        prefix = 2
+                   elif subnet_mask_used == prefix_3:
+                         prefix = 3 
+                   elif subnet_mask_used == prefix_4:
+                         prefix = 4 
+                   elif subnet_mask_used == prefix_5:
+                         prefix = 5 
+                   elif subnet_mask_used == prefix_6:
+                         prefix = 6 
+                   elif subnet_mask_used == prefix_7:
+                         prefix = 7 
+                   elif subnet_mask_used == prefix_8:
+                        prefix = 8
+                   elif subnet_mask_used == prefix_9:
+                        prefix = 9 
+                   elif subnet_mask_used == prefix_10:
+                        prefix = 10 
+                   elif subnet_mask_used == prefix_11:
+                         prefix = 11 
+                   elif subnet_mask_used == prefix_12:
+                         prefix = 12
+                   elif subnet_mask_used == prefix_13:
+                         prefix = 13 
+                   elif subnet_mask_used == prefix_14:
+                         prefix = 14 
+                   elif subnet_mask_used == prefix_15:
+                         prefix = 15 
+                   elif subnet_mask_used == prefix_16:
+                        prefix = 16
+                   elif subnet_mask_used == prefix_17:
+                        prefix = 17 
+                   elif subnet_mask_used == prefix_18:
+                        prefix = 18 
+                   elif subnet_mask_used == prefix_19:
+                         prefix = 19 
+                   elif subnet_mask_used == prefix_20:
+                         prefix = 20 
+                   elif subnet_mask_used == prefix_21:
+                         prefix = 21 
+                   elif subnet_mask_used == prefix_22:
+                         prefix = 22 
+                   elif subnet_mask_used == prefix_23:
+                         prefix = 23 
+                   elif subnet_mask_used == prefix_24:
+                        prefix = 24
+                   elif subnet_mask_used == prefix_25:
+                        prefix = 25 
+                   elif subnet_mask_used == prefix_26:
+                        prefix = 26
+                   elif subnet_mask_used == prefix_27:
+                         prefix = 27 
+                   elif subnet_mask_used == prefix_28:
+                         prefix = 28 
+                   elif subnet_mask_used == prefix_29:
+                         prefix = 29 
+                   elif subnet_mask_used == prefix_30:
+                         prefix = 30 
+                   elif subnet_mask_used == prefix_31:
+                         prefix = 31 
+                   elif subnet_mask_used == prefix_32:
+                        prefix = 32
+                   
+                           
+                   if self.vendor.lower() == "cisco":
+                        for item in interfaces:
+                         main_interface_used = item["main_interface"]
+                         sub_interface = item["sub_interface"]
+                         sub_interface_ip =  item["sub_interface_ip"]
+                         subnet_mask_used = item["subnet_mask"]
+                         vlan = item["vlan"] 
+                         native_vlan = item["native_vlan"]
+                         #Enabling the interface if is shutdown just in case
+                         command1  = "enable && configure terminal && interface " + main_interface_used + " && no shutdown && exit && exit && write"
+                         client = paramiko.client.SSHClient()
+                         client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                         client.connect(self.host, username=self.username, password=self.password)
+                         _stdin, _stdout,_stderr = client.exec_command(command1)
+                         command_output = "".join(_stdout.read().decode())
+                         print(command_output)     
+                         #Checking if they select native vlan
+                         if native_vlan == "None":
+                              #Main one ig
+                              command = "enable && configure terminal && interface "   + main_interface_used + sub_interface + " && encapsulation dot1Q " + int(vlan) + " && ip address " + sub_interface_ip + " " + subnet_mask_used  + " && no shutdown && exit && exit && write"
+                              client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                              client.connect(self.host, username=self.username, password=self.password)
+                              _stdin, _stdout,_stderr = client.exec_command(command)
+                              command_output = "".join(_stdout.read().decode())
+                              print(command_output)     
+                         if len(native_vlan) >= 1 :
+                              command = "enable && configure terminal && interface "   + main_interface_used + sub_interface + " && encapsulation dot1Q " + int(vlan) + "native" + " && ip address " + sub_interface_ip + " " + subnet_mask_used  + " && no shutdown && exit && exit && write"
+                              client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                              client.connect(self.host, username=self.username, password=self.password)
+                              _stdin, _stdout,_stderr = client.exec_command(command)
+                              command_output = "".join(_stdout.read().decode())
+                              print(command_output)
+                         else:
+                              print("Please specify a value correctly")
+                   if self.vendor.lower() == "juniper":
+                        
+                        for item in interfaces: 
+                             main_interface_used = item["main_interface"]
+                             sub_interface = item["sub_interface"]
+                             sub_interface_ip =  item["sub_interface_ip"]
+                             subnet_mask_used = item["subnet_mask"]
+                             vlan = item["vlan"] 
+                             native_vlan = "".join(item["native_vlan"])
+                             sub_interface_done = sub_interface.replace(".","")
+                    
+                             #Enabling the interface if is shutdown just in case
+                             if native_vlan == "None":
+                                  command = "configure && set interfaces " + main_interface_used + " unit " + sub_interface_done    
+                             elif len(native_vlan) >= 1:
+                                  command = "configure "
+                             #Checking if they select native vlan
+                                  
+         except TypeError: 
+              print("!!! PLEASE USE THE CORRECT TEMPLATE FORMAT !!!")
+                         
+                        
+              
+   
+      #Setup an NTP server , you can either choose to become one or get time from one 
+    def setup_NTP(self,server:str,become_host:bool):
+         if self.vendor.lower() == "cisco":
+              if become_host == True:
                    command = "enable && configure terminal && ntp master && ntp update-calendar && exit && wr  " 
                    client = paramiko.client.SSHClient()
                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
@@ -266,7 +829,7 @@ class Router():
                    command_output = "".join(_stdout.read().decode())
                    print(command_output)
          if self.vendor.lower() == "juniper":
-              if host == True:
+              if become_host == True:
                    command = "configure &&  set system ntp master && commit"
                    client = paramiko.client.SSHClient()
                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
@@ -447,7 +1010,7 @@ class Router():
             elif destination_prefix == 26:
                  subnet_mask = prefix_26
             elif destination_prefix == 27:
-                 subnet_mask = prefix_28
+                 subnet_mask = prefix_27
             elif destination_prefix == 28:
                  subnet_mask = prefix_28
             elif destination_prefix == 29:
@@ -863,7 +1426,7 @@ class Router():
 
 
 
-
+#Parse the fuckin Router here , and do everything configs and shit but with DHCP!!! yeeeyeyeeyye
 class DHCP_Server():
      def __init__(self,ip_address,):
           self.ip_adress = ip_address
