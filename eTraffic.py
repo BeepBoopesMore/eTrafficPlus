@@ -749,8 +749,10 @@ class Router():
                          prefix = 31 
                    elif subnet_mask_used == prefix_32:
                         prefix = 32
+                   else:
+                        print("PLEASE USE A CORRECT SUBNET MASK")
                    
-                           
+                   #Cisco       
                    if self.vendor.lower() == "cisco":
                         for item in interfaces:
                          main_interface_used = item["main_interface"]
@@ -785,6 +787,7 @@ class Router():
                               print(command_output)
                          else:
                               print("Please specify a value correctly")
+                   #Juniper
                    if self.vendor.lower() == "juniper":
                         
                         for item in interfaces: 
@@ -792,15 +795,49 @@ class Router():
                              sub_interface = item["sub_interface"]
                              sub_interface_ip =  item["sub_interface_ip"]
                              subnet_mask_used = item["subnet_mask"]
-                             vlan = item["vlan"] 
+                             vlan = item["vlan"]
                              native_vlan = "".join(item["native_vlan"])
                              sub_interface_done = sub_interface.replace(".","")
-                    
-                             #Enabling the interface if is shutdown just in case
+                             ip_address_done = sub_interface_ip+prefix
+                             #Enabling the interface if it is shutdown just in case aswell
+                             command_interface_just_in_case = "configure && set interfaces " + sub_interface_done + " disable && commit " 
+                             client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                             client.connect(self.host, username=self.username, password=self.password)
+                             _stdin, _stdout,_stderr = client.exec_command(command)
+                             command_output1 = "".join(_stdout.read().decode())
+                             print(command_output1)
+
+     
+                             #Checking if they select native vlan
                              if native_vlan == "None":
-                                  command = "configure && set interfaces " + main_interface_used + " unit " + sub_interface_done    
-                             elif len(native_vlan) >= 1:
-                                  command = "configure "
+                                  command = "configure && set interfaces " + main_interface_used + " unit " + sub_interface_done + " vlan-id " + vlan + " && commit"
+                                  command2 = "configure && set interfaces " + main_interface_used + " unit " + sub_interface_done + " family inet address "  + ip_address_done + " && commit "
+                                  client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                                  client.connect(self.host, username=self.username, password=self.password)
+                                  _stdin, _stdout,_stderr = client.exec_command(command)
+                                  command_output1 = "".join(_stdout.read().decode())
+                                  print(command_output1)
+                                  client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                                  client.connect(self.host, username=self.username, password=self.password)
+                                  _stdin, _stdout,_stderr = client.exec_command(command2)
+                                  command_output2 = "".join(_stdout.read().decode())
+                                  print(command_output2)
+
+                             elif len(native_vlan) >= 1:    
+                                  command = "configure && set interfaces " + main_interface_used + " unit 0 native-vlan-id " + native_vlan + " && commit " 
+                                  command2 = "configure && set interfaces " + main_interface_used + " unit " + sub_interface_done + " family inet address "  + ip_address_done + " && commit "
+                                  client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                                  client.connect(self.host, username=self.username, password=self.password)
+                                  _stdin, _stdout,_stderr = client.exec_command(command)
+                                  command_output1 = "".join(_stdout.read().decode())
+                                  print(command_output1)
+                                  client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                                  client.connect(self.host, username=self.username, password=self.password)
+                                  _stdin, _stdout,_stderr = client.exec_command(command2)
+                                  command_output2 = "".join(_stdout.read().decode())
+                                  print(command_output2)
+                             else:
+                                  print("Please mention eiter None or a native vlan number corresponding".upper())
                              #Checking if they select native vlan
                                   
          except TypeError: 
@@ -1472,3 +1509,4 @@ class Switch():
                        # _stdin, _stdout,_stderr = client.exec_command(command + item + " && channel-group " + port_id)
                         #command_output = "".join(_stdout.read().decode())
                         #print(command_output)
+
