@@ -7,6 +7,7 @@ from time import sleep as wait
 import os
 import socket
 from socket import gaierror
+import re
 # Doing yet just Juniper And Cisco
 #TO DO:
 #Dell
@@ -17,7 +18,7 @@ from socket import gaierror
 #DONE/70% Router
 #Cisco / 70%
 #Juniper / 60% maybe?
-
+#Do the Re Processing
 
 
 class Router():
@@ -28,6 +29,11 @@ class Router():
              self.host = host
              self.username = username
              self.password = password
+             #Patterns 
+             pattern_vlan_name = r'^\d+\s+([A-Za-z0-9\s]+)\s+(\w+)\s+'
+             pattern_vlan2 = r'^\d+\s+[a-zA-Z0-9\s]+(?:\s+active)?\s+([a-zA-Z0-9/,\s]+)'
+
+
              #These are raw i need to beautify them !!!!!! TO DO BTW
              #Commands for Cisco , to use in others or strings unlike the show functions which you just use to see stuff and can't work around
              if vendor.lower() == "cisco":
@@ -422,13 +428,106 @@ class Router():
               command = "enable && configure terminal && no lldp run"
 
     #Create a dynamic_protocol on the Router
-    def dynamic_protocol(self):
-         with open("templatedynamic.json","r") as file:
-              data = json.load(file)
-              if self.vendor.lower() == "cisco":
-                   command = "Will see "
-              elif self.vendor.lower() =="juniper":
-                   command = "will see"
+    def dynamic_protocol(self,file_path:str):
+          with open(file_path,"r") as file:
+               data = json.load(file)
+               if self.vendor.lower() == "cisco":
+                    data = json.load(file)
+                    protocols = data["Protocols"]
+                    used_protocol =  protocols[0]
+                    protocol = used_protocol["dynamic_protocol"]
+                    if protocol == "OSPF":
+                         area = used_protocol["area"]
+                         network =  used_protocol["network"]
+                         process_id  = used_protocol["process_id"]
+                         reference_bandwidth = used_protocol["reference_bandwidth_value"]
+                         passive_interfaces =  used_protocol["passive_interfaces"]
+                         if reference_bandwidth == "Default":
+                              reference_bandwidth_used = 100
+                              command = "enable && configure terminal &&  router ospf " + str(process_id) + "&& auto-cost reference-bandwith " + str(reference_bandwidth_used) + " && network " + network +   " " + str(area) + " && exit && exit && write"
+                         elif reference_bandwidth >= 0:
+                              reference_bandwidth_used = reference_bandwidth
+                              command = "enable && configure terminal &&  router ospf " + str(process_id) + "&& auto-cost reference-bandwith " + str(reference_bandwidth_used) + " && network " + network +   " " + str(area) + " && exit && exit && write"
+                         else:
+                              print("!!! PLEASE USE DEFAULT OR A VALUE !!!")
+
+
+                         for item in passive_interfaces:
+                              command = "enable && configure terminal && router ospf " + str(process_id) + "&& passive-interface " + item   
+
+                    elif protocol == "EIGRP":
+                         astronomous_system = used_protocol["AS"]
+                         bool =  used_protocol["auto_summary"]
+                         network  = used_protocol["network"]
+                         passive_interfaces = used_protocol["passive_interfaces"]
+                         if bool == "True":
+                              command1 = "en && conf t && router eigrp " + astronomous_system + " && network " + network + " &&  auto-summary " + " && exit && exit && wr"
+                              for interface in passive_interfaces:
+                                   command2 = "en && conf t && router eigrp " + astronomous_system + " && passive_interface " + interface 
+                                   command3 = "en && wr"
+                         elif bool == "False":
+                              command4 = "en && conf t && router eigrp " + astronomous_system + " && network " + network  + " && exit && exit && wr"
+                              for interface in passive_interfaces:
+                                   command5 = "en && configure terminal  && router eigrp " + astronomous_system + " && passive_interface " + interface 
+                                   command6 = "en && write"
+                         else:
+                              print("!!! PLEASE INSERT TRUE OR FALSE !!!")
+                    
+                    elif protocol == "RIP":
+                         version = used_protocol["version"]
+                         auto_summary = used_protocol["auto_summary"]
+                         network = used_protocol["network"]
+
+                         if auto_summary == "True":
+                              command = "enable && configure terminal && router rip && auto-summary  " + " && network " + network + " && version " + version + " && exit && exit && write " 
+                         
+
+
+                         elif auto_summary == "False":
+                              command = "enable && configure terminal && router rip && no auto-summary "  + " && network " + network + " && version " + version + " && exit && exit && write "
+                              
+
+                         else:
+                              print("!!! PLEASE INSERT TRUE OR FALSE !!!")
+                    
+                    else:
+                         print("!!!PLEASE INSERT A CORRECT PROTOCOL OR MAKE SURE THAT IT IS IN FULL CAPS!!!")
+                    
+
+
+              #Maybe do this !!! DO THIS , TOMORROW IMPORTANT
+               elif self.vendor.lower() =="juniper":
+                    data =  json.load(file)
+                    protocols = data["Protocols"]
+                    used_protocol = protocols[0]
+                    protocol = used_protocol["dynamic_protocol"]
+                    if protocol == "OSPF":
+                         area = used_protocol["area"]
+                         network = used_protocol["network"]
+                         command = ""
+                    elif protocol ==  "RIP":
+                         command = ""
+
+               
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   
     #Turning on an interface
     def turn_on_interfaces(self,interfaces:list):
      apendixes = ["g","f","s"]
@@ -916,7 +1015,7 @@ class Router():
            _stdin, _stdout,_stderr = client.exec_command("enable && show ip protocols")
            command_output = "".join(_stdout.read().decode())
            print(command_output)
-        if self.vendor == "cisco":
+        elif self.vendor == "cisco":
            client = paramiko.client.SSHClient()
            client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
            client.connect(self.host, username=self.username, password=self.password)
@@ -925,9 +1024,20 @@ class Router():
            print(command_output)
         if self.vendor == "Juniper":
             command = 'show configuration protocols'
-        
-        if self.vendor == "juniper":
+            client = paramiko.client.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+            client.connect(self.host, username=self.username, password=self.password)
+            _stdin, _stdout,_stderr = client.exec_command("enable && show ip protocols")
+            command_output = "".join(_stdout.read().decode())
+            print(command_output)
+        elif self.vendor == "juniper":
              command = 'show configuration protocols'
+             client = paramiko.client.SSHClient()
+             client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+             client.connect(self.host, username=self.username, password=self.password)
+             _stdin, _stdout,_stderr = client.exec_command("enable && show ip protocols")
+             command_output = "".join(_stdout.read().decode())
+             print(command_output)
 
     
 
@@ -1291,9 +1401,27 @@ class Router():
      if self.vendor.lower() == "cisco":
           if clear_translations == True:
                command = "enable && clear ip nat translations * "
+               client = paramiko.client.SSHClient()
+               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+               client.connect(self.host, username=self.username, password=self.password)
+               _stdin, _stdout,_stderr = client.exec_command(command)
+               command_output = "".join(_stdout.read().decode())
+               print(command_output)
+               command2 =  "enable && show ip nat translations"
+               client = paramiko.client.SSHClient()
+               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+               client.connect(self.host, username=self.username, password=self.password)
+               _stdin, _stdout,_stderr = client.exec_command(command2)
+               command_output2 = "".join(_stdout.read().decode())
+               print(command_output2)
           else:
                command = "enable && show ip nat translations"
-
+               client = paramiko.client.SSHClient()
+               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+               client.connect(self.host, username=self.username, password=self.password)
+               _stdin, _stdout,_stderr = client.exec_command(command)
+               command_output = "".join(_stdout.read().decode())
+               print(command_output)
      elif self.vendor.lower() == "juniper":
           if clear_translations == True:
                command = "cli && clear security nat translation"
@@ -1377,7 +1505,7 @@ class Router():
                print("!!!You have to select a Layer 2 Discovery Method...")
 
             print("")
-        elif self.vendor == "cisco":
+        elif self.vendor.lower() == "cisco":
             #Checking the boolean 
             if cdp == True and lldp == False:
                  #prefered_thing = "CDP"
@@ -1451,7 +1579,6 @@ class Router():
         elif self.vendor == "Juniper":
             command =  "show lldp neigh"
             cdp = False
-            cdp = False
             client = paramiko.client.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
             client.connect(self.host, username=self.username, password=self.password)
@@ -1463,10 +1590,12 @@ class Router():
 
 
 
-#Parse the fuckin Router here , and do everything configs and shit but with DHCP!!! yeeeyeyeeyye
+#Parse the  Router here , and do everything configs and shit but with DHCP!!! yeeeyeyeeyye
 class DHCP_Server():
-     def __init__(self,ip_address,):
-          self.ip_adress = ip_address
+     from eTraffic import Router
+     def __init__(self,ip_address:str,subnet:str):
+          self.ip_address = ip_address
+          self.subnet = subnet
           pass 
      
 
@@ -1489,9 +1618,208 @@ class TFTP_SERVER():
 
 #Switch LATER ON
 class Switch():
-    def __init__(self):
-         pass
-    
+    def __init__(self,host:str,username:str,password:str,vendor:str):
+         try:
+               self.host = host
+               self.username = username
+               self.password = password
+               self.vendor = vendor
+               #Patterns 
+               #Vlan
+               pattern_vlan_name = r'^\d+\s+([A-Za-z0-9\s]+)\s+(\w+)\s+'
+               pattern_vlan2 = r'^\d+\s+[a-zA-Z0-9\s]+(?:\s+active)?\s+([a-zA-Z0-9/,\s]+)'
+               #Interfaces
+               #
+               #
+               #Other
+               #
+
+
+
+               
+               #Defining the values just like at the Router
+               if self.vendor.lower() == "cisco":
+                    #Commands for show  self for Cisco 
+                    #Model
+                    command1 = "enable && show model"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command1)
+                    command_output1 = "".join(_stdout.read().decode())
+                    self.model = command_output1
+                    #Vlans
+                    command2 = "enable && show vlan brief"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command2)
+                    command_output2 = "".join(_stdout.read().decode())
+                    self.vlans = command_output2
+                    #Clock
+                    command3 = "enable && show clock"  
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command3)
+                    command_output3 = "".join(_stdout.read().decode())
+                    self.clock = command_output3
+                    #Logging
+                    command4 = "enable && show logging"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command4)
+                    command_output4 = "".join(_stdout.read().decode())
+                    self.logging = command_output4
+                    #Spanning Tree
+                    command5 = "enable && show spanning-tree"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command5)
+                    command_output5 = "".join(_stdout.read().decode())
+                    self.spanning_tree = command_output5
+                    #Port Security
+                    command6 = "enable && show port-security"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command6)
+                    command_output6 = "".join(_stdout.read().decode())
+                    self.port_security = command_output6
+                    #Privilege
+                    command7 = "enable && show privilege"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command7)
+                    command_output7 = "".join(_stdout.read().decode())
+                    self.privilege = command_output7
+                    #SNMP
+                    command8 = "enable && show snmp"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command8)
+                    command_output8 = "".join(_stdout.read().decode())
+                    self.snmp = command_output8
+                    #Access-lists
+                    command9 = "enable && show access-lists"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command9)
+                    command_output9 = "".join(_stdout.read().decode())
+                    self.access_lists = command_output9
+                    #VTP
+                    command10 = "enable && show vtp status"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command10)
+                    command_output10 = "".join(_stdout.read().decode())
+                    self.vtp = command_output10
+
+
+
+                    #Commands and self commands for cisco
+               elif self.vendor.lower() == "juniper":
+                    command = ""
+         except paramiko.ssh_exception.NoValidConnectionsError:
+              d = "!!!!!! The connection doesn't exist or the host doesn't allow ssh connections.. !!!!!!!!".upper()
+              print(d)
+         except TimeoutError:
+              print("!!! OOPS SOMETHING HAPPENED BUT MOST LIKELY THE HOST IS DOWN OR DOESN'T EXIST OR DOESN'T ACCEPT PORT 22 !!!")
+         except UnicodeError:
+              print("!!! rewrite the router info  , it is not valid you idiot !!!  ".upper())
+              pass
+  
+
+
+          #Save the configuration
+    def write(self):
+               command = "enable && write"
+               client = paramiko.client.SSHClient()
+               client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+               client.connect(self.host, username=self.username, password=self.password)
+               _stdin, _stdout,_stderr = client.exec_command(command)
+               command_output = "".join(_stdout.read().decode())
+               print(command_output)
+          #Shows the vlans
+    def show_vlans(self):
+               if self.vendor.lower() == "cisco":
+                    command = "enable && show vlan brief"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command)
+                    command_output = "".join(_stdout.read().decode())
+                    print(command_output)
+               elif self.vendor.lower() == "juniper":
+                    command = "show vlans"
+                    client = paramiko.client.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+                    client.connect(self.host, username=self.username, password=self.password)
+                    _stdin, _stdout,_stderr = client.exec_command(command)
+                    command_output = "".join(_stdout.read().decode())
+                    print(command_output)
+          #Create Port Security 
+          #Do tomorrow 
+    def manage_port_security(self,file_path:str):
+         try:
+             if self.vendor.lower() == "cisco":
+                  with open(file_path,"r") as file:
+                       data = json.load(file)
+
+                        #Data 
+                       main_interface = data["interface"]
+                       interface_type = data["interface_type"]
+                       sticky = data["sticky"]
+                       aging_time = data["aging_time"]
+                       violation = data["violation"]
+                       secure_mac = data["secure_mac_address"]
+                       maximum_mac_addressess = data["maximum_mac_address"]
+ 
+
+                       if "".join(interface_type).lower() == "single":
+                            #Checking if the interface has switchport mode trunk or access:
+                            command_check_interface = "enable && show "
+
+
+                            
+                            command_prefix1 = " interface " + main_interface
+
+
+                            #Something after 
+                            if sticky == True:
+                                 command_prefix2 = " && switchport port-security mac-address sticky"
+                            else:
+                                command_prefix2 =  " switchport port-security mac-address " + secure_mac
+                       elif "".join(interface_type).lower() == "range":
+                            #Checking if the inerface has switchport mode trunk or access:
+                            
+
+
+
+                            #Something after
+                            command_prefix1 = " interface range " + main_interface
+                       else:
+                               print("!!! Not a valid interface type !!!")
+
+                  
+         #Error Handling 
+         except:
+              print("Will do later for sure ")
+              
+              
+
+ 
+
+
+
+
+
     #def port_channel(self):
          #vendor2 = self.vendor.lower
          #with open("portchannelsetting.json","r") as portchannel:
@@ -1509,4 +1837,3 @@ class Switch():
                        # _stdin, _stdout,_stderr = client.exec_command(command + item + " && channel-group " + port_id)
                         #command_output = "".join(_stdout.read().decode())
                         #print(command_output)
-
