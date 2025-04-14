@@ -9,7 +9,7 @@ If you know those just use the instructions in the respective function. P.S Plea
  -Also someone please lend me a cisco router or a switch to actually test this thing
 
 # MORE IMPORTANT !!!!
- # DO NOT CALLED THIS FINISHED UNTIL I HAVE REWRITTEN IT WITH LAZY LOADING PLEASE
+ # DO NOT CALL THIS FINISHED UNTIL I HAVE REWRITTEN IT WITH LAZY LOADING PLEASE
 
 ## Why eTraffic?
 eTraffic is genuinely easier to use  and u barely have to do anything besides just editing the provided template and use the base models functions which are all pretty straight forward
